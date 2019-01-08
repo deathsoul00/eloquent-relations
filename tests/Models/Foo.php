@@ -13,7 +13,7 @@ class Foo extends Model
     use ExtendsEloquentModel;
 
     /**
-     * bar relationship
+     * bar relations
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
@@ -23,12 +23,86 @@ class Foo extends Model
     }
 
     /**
-     * apple relationship
+     * crate relation
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function apple()
+    public function crate()
     {
-        return $this->hasOne(Apple::class, 'foo_id');
+        return $this->hasOne(Crate::class, 'foo_id');
+    }
+
+    /**
+     * bars relation
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bars()
+    {
+        return $this->hasMany(Bar::class, 'foo_id');
+    }
+
+    /**
+     * crates relation
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function crates()
+    {
+        return $this->hasMany(Crate::class, 'foo_id');
+    }
+
+    /**
+     * creates relation without trashes
+     *
+     * @return void
+     */
+    public function untrashedCrates()
+    {
+        return $this->crates()
+            ->withoutTrashed();
+    }
+
+    /**
+     * crates relation trashes only
+     *
+     * @return void
+     */
+    public function trashedCrates()
+    {
+        return $this->crates()
+            ->onlyTrashed();
+    }
+
+    /**
+     * creates relation active only
+     *
+     * @return void
+     */
+    public function activeCrates()
+    {
+        return $this->crates()
+            ->where('status', 'A');
+    }
+
+    /**
+     * creates relation active only
+     *
+     * @return void
+     */
+    public function someCrates()
+    {
+        return $this->crates()
+            ->orWhere('status', 'P');
+    }
+
+    /**
+     * apple crates relations
+     *
+     * @return void
+     */
+    public function appleCrates()
+    {
+        return $this->hasManyThrough(Crate::class, Apple::class);
     }
 }

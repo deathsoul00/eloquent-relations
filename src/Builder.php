@@ -6,8 +6,11 @@
 namespace Deathsoul\Eloquent;
 
 use Closure;
+use InvalidArgumentException;
 use Deathsoul\Eloquent\Relations\HasOne;
+use Deathsoul\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\JoinClause;
+use Deathsoul\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\ScopeDeletingScope;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
@@ -40,6 +43,21 @@ class Builder extends EloquentBuilder
      * @var array
      */
     public $relationClauses = [];
+
+    /**
+     * cache storage for already created join tables
+     *
+     * @var array
+     */
+    private $joinedTables = [];
+
+    /**
+     * tells if the current parent table already created a select clause
+     * and group by clause
+     *
+     * @var boolean
+     */
+    private $selected = false;
 
     /**
      * {@inheritDoc}
@@ -119,10 +137,10 @@ class Builder extends EloquentBuilder
         $column = $query->performJoin($column);
 
         if (strrpos($column, '.') !== false) {
-            $aggregateMethod = ($aggregateMethod) ?: $this->aggregateMethod;
+            $aggregateMethod = ($aggregateMethod) ?: self::AGGREGATE_MAX;
             if ($this->checkAggregateMethod($aggregateMethod)) {
-                $query->selectRaw("{$aggregateMethod}.({$column}) as sort");
-                return $query->orderRaw("sort {$direction}");
+                $query->selectRaw("{$aggregateMethod}({$column}) as sort");
+                return $query->orderByRaw("sort {$direction}");
             }
         }
 
@@ -145,6 +163,14 @@ class Builder extends EloquentBuilder
         return $this;
     }
 
+    /**
+     * perform convertion of the given relation in join query clause
+     *
+     * @param  string  $relations
+     * @param  boolean $leftJoin
+     *
+     * @return string
+     */
     protected function performJoin($relations, $leftJoin = true)
     {
         // get what join method to be used
@@ -156,9 +182,6 @@ class Builder extends EloquentBuilder
         $currentModel = $baseModel = $this->getModel();
         $currentBaseTable = $currentTableAlias = $baseTable = $baseModel->getTable();
         $currentPrimaryKey = $baseTablePrimaryKey = $baseModel->getKeyName();
-
-        static $joinedTables = [];
-        static $selected = false;
 
         $relatedJoins = [];
         foreach ($args as $arg) {
@@ -180,14 +203,20 @@ class Builder extends EloquentBuilder
             $relatedJoins[] = $relatedTableAlias;
             $relatedJoinString = implode('_', $relatedJoins);
 
-            if (! in_array($relatedJoinString, $joinedTables)) {
+            if (! in_array($relatedJoinString, $this->joinedTables)) {
                 $joinClause = "{$relatedTable} as {$relatedTableAlias}";
 
-                if ($relation instanceof HasOne) {
+                if ($relation instanceof HasOne || $relation instanceof HasMany) {
                     $relatedKey = $relation->getQualifiedForeignKeyName();
                     $relatedKey = last(explode('.', $relatedKey));
                     $this->$joinMethod($joinClause, function ($join) use ($relation, $relatedTableAlias, $relatedKey, $currentTableAlias, $currentPrimaryKey) {
                         $join->on("{$relatedTableAlias}.{$relatedKey}", '=', "{$currentTableAlias}.{$currentPrimaryKey}");
+                        $this->joinQuery($join, $relation, $relatedTableAlias);
+                    });
+                } elseif ($relation instanceof BelongsTo) {
+                    $relatedKey = $relation->getForeignKey();
+                    $this->$joinMethod($joinClause, function ($join) use ($relation, $relatedTableAlias, $relatedPrimaryKey, $currentTableAlias, $relatedKey) {
+                        $join->on("{$relatedTableAlias}.{$relatedPrimaryKey}", '=', "{$currentTableAlias}.{$relatedKey}");
                         $this->joinQuery($join, $relation, $relatedTableAlias);
                     });
                 } else {
@@ -199,12 +228,12 @@ class Builder extends EloquentBuilder
                 $currentPrimaryKey = $relatedPrimaryKey;
 
                 // cache already joined tables
-                $joinedTables[] = $relatedJoinString;
+                $this->joinedTables[] = $relatedJoinString;
             }
         }
 
-        if ($selected === false && count($args) > 1) {
-            $selected = true;
+        if ($this->selected === false && count($args) > 1) {
+            $this->selected = true;
             $this->selectRaw("{$baseTable}.*");
             $this->groupBy("{$baseTable}.{$baseTablePrimaryKey}");
         }
@@ -217,7 +246,8 @@ class Builder extends EloquentBuilder
      *
      * @param  \Illuminate\Database\Query\JoinClause            $join
      * @param  \Illuminate\Database\Eloquent\Relations\Relation $relation
-     * @param [type] $relatedTableAlias
+     * @param  string                                           $relatedTableAlias
+     *
      * @return void
      */
     protected function joinQuery(JoinClause $join, Relation $relation, $relatedTableAlias)
@@ -255,12 +285,12 @@ class Builder extends EloquentBuilder
     {
         if (in_array($method, ['where', 'orWhere'])) {
             if (is_array($params[0])) {
-                foreach ($params[0] as $k => $param) {
+                foreach ($params[0] as $key => $param) {
                     $params[0]["{$relatedTableAlias}.{$key}"] = $param;
-                    unset($params[0][$k]);
+                    unset($params[0][$key]);
                 }
             } else {
-                $params[0]["{$relatedTableAlias}.{$key}"] = $param;
+                $params[0] = "{$relatedTableAlias}.{$params[0]}";
             }
 
             call_user_func_array([$join, $method], $params);
@@ -284,13 +314,13 @@ class Builder extends EloquentBuilder
      */
     protected function checkAggregateMethod($method)
     {
-        if (! in_array($aggregates = [
+        if (! in_array($method, $aggregates = [
             static::AGGREGATE_SUM,
             static::AGGREGATE_AVG,
             static::AGGREGATE_MIN,
             static::AGGREGATE_MAX,
             static::AGGREGATE_COUNT
-        ], $method)
+        ])
         ) {
             throw new InvalidArgumentException(
                 sprintf('Aggregate method used is not valid, you may use %s', implode(',', $aggregates))

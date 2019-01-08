@@ -17,7 +17,7 @@ trait Relations
      */
     public function __call($method, $parameters)
     {
-        $this->getQuery()->relationsClauses[] = [$method => $parameters];
+        $this->getQuery()->relationClauses[] = [$method => $parameters];
         return parent::__call($method, $parameters);
     }
 }
