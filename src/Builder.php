@@ -139,7 +139,7 @@ class Builder extends EloquentBuilder
         if (strrpos($column, '.') !== false) {
             $aggregateMethod = ($aggregateMethod) ?: self::AGGREGATE_MAX;
             if ($this->checkAggregateMethod($aggregateMethod)) {
-                $query->selectRaw("{$aggregateMethod}({$column}) as sort");
+                $query->selectRaw("{$aggregateMethod}({$this->getDefinedTablePrefix()}{$column}) as sort");
                 return $query->orderByRaw("sort {$direction}");
             }
         }
@@ -234,7 +234,7 @@ class Builder extends EloquentBuilder
 
         if ($this->selected === false && count($args) > 1) {
             $this->selected = true;
-            $this->select("{$baseTable}.*");
+            $this->selectRaw("{$this->getDefinedTablePrefix()}{$baseTable}.*");
             $this->groupBy("{$baseTable}.{$baseTablePrimaryKey}");
         }
 
@@ -328,5 +328,15 @@ class Builder extends EloquentBuilder
         }
 
         return true;
+    }
+
+    /**
+     * retrieves the defined prefix for the current table
+     *
+     * @return string
+     */
+    protected function getDefinedTablePrefix()
+    {
+        return $this->query->getConnection()->getTablePrefix();
     }
 }

@@ -26,7 +26,7 @@ class BuilderTest extends TestCase
         $builder->joinRelations('bar');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "bars" as "bars" on "bars"."foo_id" = "foos"."id" group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "bars" as "bars" on "bars"."foo_id" = "foos"."id" group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -48,7 +48,7 @@ class BuilderTest extends TestCase
             ->joinRelations('crate');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "bars" as "bars" on "bars"."foo_id" = "foos"."id" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "bars" as "bars" on "bars"."foo_id" = "foos"."id" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -69,7 +69,7 @@ class BuilderTest extends TestCase
         $builder->joinRelations('bars');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "bars" as "bars" on "bars"."foo_id" = "foos"."id" group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "bars" as "bars" on "bars"."foo_id" = "foos"."id" group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -91,7 +91,7 @@ class BuilderTest extends TestCase
             ->joinRelations('crates');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "bars" as "bars" on "bars"."foo_id" = "foos"."id" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "bars" as "bars" on "bars"."foo_id" = "foos"."id" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -112,7 +112,7 @@ class BuilderTest extends TestCase
         $builder->joinRelations('foo');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "bars".* from "bars" left join "foos" as "foos" on "foos"."id" = "bars"."foo_id" group by "bars"."id"';
+        $expectedSql = 'select bars.* from "bars" left join "foos" as "foos" on "foos"."id" = "bars"."foo_id" group by "bars"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -133,7 +133,7 @@ class BuilderTest extends TestCase
         $builder->joinRelations('crate.apples');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" left join "apples" as "apples" on "apples"."crate_id" = "crates"."id" group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" left join "apples" as "apples" on "apples"."crate_id" = "crates"."id" group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -154,7 +154,7 @@ class BuilderTest extends TestCase
         $builder->joinRelations('untrashedCrates');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" and "crates"."deleted_at" is null group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" and "crates"."deleted_at" is null group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -175,7 +175,7 @@ class BuilderTest extends TestCase
         $builder->joinRelations('trashedCrates');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" and "crates"."deleted_at" is not null group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" and "crates"."deleted_at" is not null group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -196,7 +196,7 @@ class BuilderTest extends TestCase
         $builder->joinRelations('activeCrates');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" and "crates"."status" = ? group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" and "crates"."status" = ? group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -217,7 +217,7 @@ class BuilderTest extends TestCase
         $builder->joinRelations('someCrates');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" or "crates"."status" = ? group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" or "crates"."status" = ? group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -238,7 +238,7 @@ class BuilderTest extends TestCase
         $builder->whereJoin('crates.status', 'A');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" where "crates"."status" = ? group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" where "crates"."status" = ? group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -261,7 +261,7 @@ class BuilderTest extends TestCase
             ->orWhereJoin('crates.status', 'A');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" where "status" = ? or "crates"."status" = ? group by "foos"."id"';
+        $expectedSql = 'select foos.* from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" where "status" = ? or "crates"."status" = ? group by "foos"."id"';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
@@ -282,7 +282,7 @@ class BuilderTest extends TestCase
         $builder->orderByJoin('crates.name', 'ASC');
 
         // this should be equal value of the generated sql
-        $expectedSql = 'select "foos".*, MAX(crates.name) as sort from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" group by "foos"."id" order by sort ASC';
+        $expectedSql = 'select foos.*, MAX(crates.name) as sort from "foos" left join "crates" as "crates" on "crates"."foo_id" = "foos"."id" group by "foos"."id" order by sort ASC';
 
         // assert
         $this->assertEquals($expectedSql, $builder->toSql());
