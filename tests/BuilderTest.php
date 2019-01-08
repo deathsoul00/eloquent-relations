@@ -336,4 +336,29 @@ class BuilderTest extends TestCase
 
         $builder->joinRelations('bananas');
     }
+
+    /**
+     * test where clause using callback as parameter
+     *
+     * @fix undefined method exception newModelQuery in where method ln: 75
+     *
+     * @return void
+     */
+    public function testWhereClauseUsingCallback()
+    {
+        // create new builder instance
+        $builder = app(Builder::class);
+        $builder->setModel(new Foo([]));
+
+        // call method
+        $builder->where(function ($query) {
+            $query->where('status', 1);
+        });
+
+        // this will be the expected query to be build
+        $expectedSql = 'select * from "foos" where ("status" = ?)';
+
+        // assert
+        $this->assertEquals($expectedSql, $builder->toSql());
+    }
 }

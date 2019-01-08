@@ -72,7 +72,7 @@ class Builder extends EloquentBuilder
     public function where($column, $operator = null, $value = null, $boolean = 'and')
     {
         if ($column instanceof Closure) {
-            $query = $this->getModel()->newModelQuery();
+            $query = $this->getModel()->newQuery();
             $query->builder = $this->builder ?: $this;
 
             // call callback
