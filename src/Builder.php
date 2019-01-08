@@ -81,7 +81,7 @@ class Builder extends EloquentBuilder
             // create nested query (where)
             $this->query->addNestedWhereQuery($query->getQuery(), $boolean);
         } else {
-            call_user_func_array([$this->query, 'where'], func_get_args());
+            $this->query->where(...func_get_args());
         }
 
         return $this;
@@ -102,7 +102,7 @@ class Builder extends EloquentBuilder
         $query = ($this->builder) ?: $this;
         $column = $query->performJoin($column);
 
-        return call_user_func_array([$this, 'where'], func_get_args());
+        return $this->where($column, $operator, $value, $boolean);
     }
 
     /**
@@ -119,7 +119,7 @@ class Builder extends EloquentBuilder
         $query = ($this->builder) ?: $this;
         $column = $query->performJoin($column);
 
-        return call_user_func_array([$this, 'orWhere'], func_get_args());
+        return $this->orWhere($column, $operator, $value);
     }
 
     /**
@@ -180,7 +180,7 @@ class Builder extends EloquentBuilder
         $args = explode('.', $relations);
         $column = end($args);
         $currentModel = $baseModel = $this->getModel();
-        $currentBaseTable = $currentTableAlias = $baseTable = $baseModel->getTable();
+        $currentTableAlias = $baseTable = $baseModel->getTable();
         $currentPrimaryKey = $baseTablePrimaryKey = $baseModel->getKeyName();
 
         $relatedJoins = [];
@@ -190,7 +190,7 @@ class Builder extends EloquentBuilder
                 break;
             }
 
-            if (! is_callable([$currentModel, $arg])) {
+            if (! method_exists($currentModel, $arg)) {
                 throw new NotDefinedRelationException($arg, get_class($currentModel));
             }
 
@@ -223,18 +223,18 @@ class Builder extends EloquentBuilder
                     throw new UnsupportedRelationException($relation);
                 }
 
-                $currentModel = $relatedModel;
-                $currentTableAlias = $relatedTableAlias;
-                $currentPrimaryKey = $relatedPrimaryKey;
-
                 // cache already joined tables
                 $this->joinedTables[] = $relatedJoinString;
             }
+
+            $currentModel = $relatedModel;
+            $currentTableAlias = $relatedTableAlias;
+            $currentPrimaryKey = $relatedPrimaryKey;
         }
 
         if ($this->selected === false && count($args) > 1) {
             $this->selected = true;
-            $this->selectRaw("{$baseTable}.*");
+            $this->select("{$baseTable}.*");
             $this->groupBy("{$baseTable}.{$baseTablePrimaryKey}");
         }
 

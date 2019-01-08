@@ -3,7 +3,7 @@
  * @author Mike Alvarez <michaeljpalvarez@gmail.com>
  */
 
-namespace App\Database\Eloquent\Exceptions;
+namespace Deathsoul\Eloquent\Exceptions;
 
 use Exception;
 
